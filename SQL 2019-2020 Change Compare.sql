@@ -2,6 +2,46 @@ DELETE FROM REPORTS.DBO.CDR_OUTPUT
 Delete from Reports.dbo.ProspectiveTotalDonations Where [Month]<month(Getdate()) or ([Month]=month(Getdate()) and [Day]<day(Getdate()))
 Delete from Reports.dbo.ProspectiveRegDonations Where [Month]<month(Getdate()) or ([Month]=month(Getdate()) and [Day]<day(Getdate()))
 ;
+DECLARE @AI TABLE (ACTINDX INT)
+IF @TOGGLE=1
+BEGIN
+	INSERT INTO @AI (ACTINDX)
+	SELECT ACTINDX FROM LM.DBO.GL00100 WHERE (ACTNUMBR_3 BETWEEN 5000 AND 5099)
+END
+ELSE
+BEGIN
+	INSERT INTO @AI (ACTINDX)
+	SELECT ACTINDX FROM LM.DBO.GL00100 WHERE (ACTNUMBR_3 BETWEEN 5000 AND 5099) OR (ACTNUMBR_3 between 3020 and 4000)
+END
+;
+DECLARE @DB TABLE (ACTINDX INT, ACTNUMBR_3 CHAR(7), ACTDESCR CHAR(51), YEAR1 SMALLINT, PERIODID SMALLINT, PERDBLNC NUMERIC(19,5))
+INSERT INTO @DB (ACTINDX, ACTNUMBR_3, ACTDESCR, YEAR1, PERIODID, PERDBLNC)
+SELECT * FROM
+(SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=1, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P01 ELSE S_P01 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=2, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P02 ELSE S_P02 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=3, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P03 ELSE S_P03 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=4, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P04 ELSE S_P04 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=5, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P05 ELSE S_P05 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=6, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P06 ELSE S_P06 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=7, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P07 ELSE S_P07 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=8, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P08 ELSE S_P08 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=9, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P09 ELSE S_P09 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=10, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P10 ELSE S_P10 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=11, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P11 ELSE S_P11 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R
+UNION
+SELECT ACTINDX, SEG3 AS ACTNUMBR_3, ACTDESCR, [YEAR] AS YEAR1, PERIODID=12, PERDBLNC = CASE WHEN TYPICALBAL = 1 THEN -S_P12 ELSE S_P12 END FROM [DynamicBudgets].[dbo].[vw_AssumptionsMonthlySummary] WHERE BUDGETID = @R) A
+WHERE ACTINDX IN (SELECT ACTINDX FROM @AI)
+;
 IF @TOGGLE = 1
 BEGIN
 INSERT INTO REPORTS.DBO.CDR_OUTPUT ([DATE],[MONTH],[MONTHNAME],[DAY],[2016WKDAY],[DAY2016A],[DAYCT2016],[CUM2016A],[MOCUM2016A],[COUNT2016],[DAY2016P],[CUM2016P],[MOCUM2016P]
@@ -30,41 +70,41 @@ FROM
 (SELECT (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char))) + '/2016' as [DATE], 
 Q.[MONTH],Q.[DAY],
 [2016WKDAY] = CASE 
-				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2019-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
+				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2020-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
 				ELSE NULL END,
 [DAY2016A] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN [TotalAmount1a]
+				WHEN GETDATE()>'2020-12-31' THEN [TotalAmount1a]
 				WHEN Q.[MONTH]<MONTH(GETDATE()) THEN isnull([TotalAmount1a],0)
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]<=DAY(GETDATE()) THEN [TotalAmount1a]
 				ELSE NULL END,
 [COUNT1] as [DAYCT2016],
 [CUM2016A] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN [CUM2016A]
+				WHEN GETDATE()>'2020-12-31' THEN [CUM2016A]
 				WHEN Q.[MONTH]<MONTH(GETDATE()) THEN [CUM2016A]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]<=DAY(GETDATE()) THEN [CUM2016A]
 				ELSE NULL END,
 [MOCUM2016A] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN [MOCUM2016A]
+				WHEN GETDATE()>'2020-12-31' THEN [MOCUM2016A]
 				WHEN Q.[MONTH]<MONTH(GETDATE()) THEN [MOCUM2016A]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]<=DAY(GETDATE()) THEN [MOCUM2016A]
 				ELSE NULL END,
 [COUNT2016] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN [COUNT2016]
+				WHEN GETDATE()>'2020-12-31' THEN [COUNT2016]
 				WHEN Q.[MONTH]<MONTH(GETDATE()) THEN [COUNT2016]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]<=DAY(GETDATE()) THEN [COUNT2016]
 				ELSE NULL END,
 [DAY2016P] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN NULL
+				WHEN GETDATE()>'2020-12-31' THEN NULL
 				WHEN Q.[MONTH]>MONTH(GETDATE()) THEN [TotalAmount1p]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]>=DAY(GETDATE()) THEN [TotalAmount1p]
 				ELSE NULL END,
 [CUM2016P] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN NULL
+				WHEN GETDATE()>'2020-12-31' THEN NULL
 				WHEN Q.[MONTH]>MONTH(GETDATE()) THEN [CUM2016P]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]>=DAY(GETDATE()) THEN [CUM2016P]
 				ELSE NULL END,
 [MOCUM2016P] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN NULL
+				WHEN GETDATE()>'2020-12-31' THEN NULL
 				WHEN Q.[MONTH]>MONTH(GETDATE()) THEN [MOCUM2016P]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]>=DAY(GETDATE()) THEN [MOCUM2016P]
 				ELSE NULL END,
@@ -72,15 +112,15 @@ Q.[MONTH],Q.[DAY],
 [BUDGETAMT] as [BUDGET2016],
 [MOBUDGETAMT] as [MOBUDGET2016], 
 [2015WKDAY] = CASE 
-				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2018-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
+				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2019-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
 				ELSE NULL END,
 ISNULL([TotalAmount2],0) as [DAY2015A], [COUNT2] as [DAYCT2015], [CUM2015A], [MOCUM2015A], ISNULL([COUNT2015],0) as [COUNT2015],
 [2014WKDAY] = CASE 
-				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2017-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
+				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2018-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
 				ELSE NULL END,
 ISNULL([TotalAmount3],0) as [DAY2014A], [COUNT3] as [DAYCT2014], [CUM2014A], [MOCUM2014A], ISNULL([COUNT2014],0) as [COUNT2014],
 [2013WKDAY] = CASE 
-				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2016-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
+				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2017-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
 				ELSE NULL END,
 ISNULL([TotalAmount4],0) as [DAY2013A], ISNULL([CUM2013A],0) as [CUM2013A], isnull([MOCUM2013A],0) as [MOCUM2013A], ISNULL([COUNT4],0) as [DAYCT2013], ISNULL([COUNT2013],0) as [COUNT2013]
 
@@ -119,7 +159,7 @@ Count1, ISNULL(Count2,0) as Count2, ISNULL(Count3,0) as Count3, ISNULL(Count4,0)
   FROM DS_Prod.dbo.T04_GiftDetails T04
   Join DS_prod.dbo.T01_TransactionMaster T01
   On T04.DocumentNumber = T01.DocumentNumber   
-  Where ProjectCode not like '3%' and [Status] not in ('E','X') and T01.[Date] between '2019-01-01' and getdate()-1 and T01.[Date]<='2019-12-31'
+  Where ProjectCode not like '3%' and [Status] not in ('E','X') and T01.[Date] between '2020-01-01' and getdate()-1 and T01.[Date]<='2021-12-31'
   Group By YEAR(T01.[Date]), MONTH(T01.[Date]), DAY(T01.[Date])) B
   FULL JOIN
   (SELECT * FROM Reports.dbo.ProspectiveRegDonations) C
@@ -131,7 +171,7 @@ Count1, ISNULL(Count2,0) as Count2, ISNULL(Count3,0) as Count3, ISNULL(Count4,0)
   FROM (SELECT *, DonationCt = CASE WHEN TotalAmount>0 THEN 1 WHEN TotalAmount<0 THEN -1 ELSE 0 END FROM DS_Prod.dbo.T04_GiftDetails) T04
   Join DS_prod.dbo.T01_TransactionMaster T01
   On T04.DocumentNumber = T01.DocumentNumber   
-  Where ProjectCode not like '3%' and [Status] not in ('E','X') and YEAR(T01.[Date]) = 2019
+  Where ProjectCode not like '3%' and [Status] not in ('E','X') and YEAR(T01.[Date]) = 2020
   Group By YEAR(T01.[Date]), MONTH(T01.[Date]), DAY(T01.[Date])) I
   
   ON H.[Month]=I.[Month] and H.[Day]=I.[Day]) A
@@ -142,7 +182,7 @@ FULL JOIN
   FROM (SELECT *, DonationCt = CASE WHEN TotalAmount>0 THEN 1 WHEN TotalAmount<0 THEN -1 ELSE 0 END FROM DS_Prod.dbo.T04_GiftDetails) T04
   Join DS_prod.dbo.T01_TransactionMaster T01
   On T04.DocumentNumber = T01.DocumentNumber   
-  Where ProjectCode not like '3%' and [Status] not in ('E','X') and YEAR(T01.[Date]) = 2018
+  Where ProjectCode not like '3%' and [Status] not in ('E','X') and YEAR(T01.[Date]) = 2019
   Group By YEAR(T01.[Date]), MONTH(T01.[Date]), DAY(T01.[Date])) B
 
 ON A.[Month]=B.[Month] and A.[Day]=B.[Day]) AA
@@ -153,7 +193,7 @@ FULL JOIN
   FROM (SELECT *, DonationCt = CASE WHEN TotalAmount>0 THEN 1 WHEN TotalAmount<0 THEN -1 ELSE 0 END FROM DS_Prod.dbo.T04_GiftDetails) T04
   Join DS_prod.dbo.T01_TransactionMaster T01
   On T04.DocumentNumber = T01.DocumentNumber   
-  Where ProjectCode not like '3%' and [Status] not in ('E','X') and YEAR(T01.[Date]) = 2017
+  Where ProjectCode not like '3%' and [Status] not in ('E','X') and YEAR(T01.[Date]) = 2018
   Group By YEAR(T01.[Date]), MONTH(T01.[Date]), DAY(T01.[Date])) BB
 
 ON AA.[Month]=BB.[Month] and AA.[Day]=BB.[Day]) AAA
@@ -165,7 +205,7 @@ FULL JOIN
   FROM (SELECT *, DonationCt = CASE WHEN TotalAmount>0 THEN 1 WHEN TotalAmount<0 THEN -1 ELSE 0 END FROM DS_Prod.dbo.T04_GiftDetails) T04
   Join DS_prod.dbo.T01_TransactionMaster T01
   On T04.DocumentNumber = T01.DocumentNumber   
-  Where ProjectCode not like '3%' and [Status] not in ('E','X') and YEAR(T01.[Date]) = 2016
+  Where ProjectCode not like '3%' and [Status] not in ('E','X') and YEAR(T01.[Date]) = 2017
   Group By YEAR(T01.[Date]), MONTH(T01.[Date]), DAY(T01.[Date])) BBB
 
 ON AAA.[Month]=BBB.[Month] and AAA.[Day]=BBB.[Day]) Y) Q
@@ -192,14 +232,9 @@ SUM([DAILYBUDGET]) OVER (PARTITION BY [MONTH] ORDER BY [MONTH], [DAY]) AS MOBUDG
 			ELSE NULL END,
 [BUDGETAMT]
 FROM
-(SELECT [PERIODID] as [MONTH]
-      , -SUM([BALANCE]) as BUDGETAMT FROM REPORTS.DBO.FS_BRDATA 
-WHERE ACTINDX IN (SELECT ACTINDX FROM LM.DBO.GL00100 WHERE ACTNUMBR_3 BETWEEN 5000 AND 5099) 
-AND YEAR1=2019 AND R=@R
-GROUP BY PERIODID) A) B
-JOIN Reports.dbo.Dates_2019 C
+(SELECT [PERIODID] as [MONTH], -SUM([PERDBLNC]) AS BUDGETAMT FROM  @DB GROUP BY [PERIODID]) A) B
+JOIN Reports.dbo.Dates_2016 C
 ON B.[MONTH]=C.[MONTH]) D) R
-
 ON Q.[MONTH]=R.[MONTH] and Q.[DAY]=R.[DAY]) Z
 ORDER BY [MONTH], [DAY]
 END
@@ -234,41 +269,41 @@ FROM
 (SELECT (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char))) + '/2016' as [DATE], 
 Q.[MONTH],Q.[DAY],
 [2016WKDAY] = CASE 
-				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2019-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
+				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2020-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
 				ELSE NULL END,
 [DAY2016A] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN [TotalAmount1a]
+				WHEN GETDATE()>'2020-12-31' THEN [TotalAmount1a]
 				WHEN Q.[MONTH]<MONTH(GETDATE()) THEN isnull([TotalAmount1a],0)
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]<=DAY(GETDATE()) THEN [TotalAmount1a]
 				ELSE NULL END,
 [COUNT1] as [DAYCT2016],
 [CUM2016A] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN [CUM2016A]
+				WHEN GETDATE()>'2020-12-31' THEN [CUM2016A]
 				WHEN Q.[MONTH]<MONTH(GETDATE()) THEN [CUM2016A]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]<=DAY(GETDATE()) THEN [CUM2016A]
 				ELSE NULL END,
 [MOCUM2016A] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN [MOCUM2016A]
+				WHEN GETDATE()>'2020-12-31' THEN [MOCUM2016A]
 				WHEN Q.[MONTH]<MONTH(GETDATE()) THEN [MOCUM2016A]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]<=DAY(GETDATE()) THEN [MOCUM2016A]
 				ELSE NULL END,
 [COUNT2016] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN [COUNT2016]
+				WHEN GETDATE()>'2020-12-31' THEN [COUNT2016]
 				WHEN Q.[MONTH]<MONTH(GETDATE()) THEN [COUNT2016]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]<=DAY(GETDATE()) THEN [COUNT2016]
 				ELSE NULL END,
 [DAY2016P] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN NULL
+				WHEN GETDATE()>'2020-12-31' THEN NULL
 				WHEN Q.[MONTH]>MONTH(GETDATE()) THEN [TotalAmount1p]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]>=DAY(GETDATE()) THEN [TotalAmount1p]
 				ELSE NULL END,
 [CUM2016P] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN NULL
+				WHEN GETDATE()>'2020-12-31' THEN NULL
 				WHEN Q.[MONTH]>MONTH(GETDATE()) THEN [CUM2016P]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]>=DAY(GETDATE()) THEN [CUM2016P]
 				ELSE NULL END,
 [MOCUM2016P] = CASE 
-				WHEN GETDATE()>'2019-12-31' THEN NULL
+				WHEN GETDATE()>'2020-12-31' THEN NULL
 				WHEN Q.[MONTH]>MONTH(GETDATE()) THEN [MOCUM2016P]
 				WHEN Q.[MONTH]=MONTH(GETDATE()) AND Q.[DAY]>=DAY(GETDATE()) THEN [MOCUM2016P]
 				ELSE NULL END,
@@ -276,15 +311,15 @@ Q.[MONTH],Q.[DAY],
 [BUDGETAMT] as [BUDGET2016],
 [MOBUDGETAMT] as [MOBUDGET2016], 
 [2015WKDAY] = CASE 
-				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2018-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
+				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2019-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
 				ELSE NULL END,
 ISNULL([TotalAmount2],0) as [DAY2015A], [COUNT2] as [DAYCT2015], [CUM2015A], [MOCUM2015A], ISNULL([COUNT2015],0) as [COUNT2015],
 [2014WKDAY] = CASE 
-				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2017-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
+				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2018-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
 				ELSE NULL END,
 ISNULL([TotalAmount3],0) as [DAY2014A], [COUNT3] as [DAYCT2014], [CUM2014A], [MOCUM2014A], ISNULL([COUNT2014],0) as [COUNT2014],
 [2013WKDAY] = CASE 
-				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2016-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
+				WHEN (RTRIM(CAST(COALESCE(Q.[Month],R.[Month]) as char)) + '/' + RTRIM(CAST(COALESCE(Q.[Day],R.[Day]) as char)))<>'2/29' THEN DATENAME(weekday,CAST('2017-'+CAST(Q.[Month] as Char)+'-'+CAST(Q.[Day] as Char) as Date))
 				ELSE NULL END,
 ISNULL([TotalAmount4],0) as [DAY2013A], ISNULL([CUM2013A],0) as [CUM2013A], isnull([MOCUM2013A],0) as [MOCUM2013A], ISNULL([COUNT4],0) as [DAYCT2013], ISNULL([COUNT2013],0) as [COUNT2013]
 
@@ -323,7 +358,7 @@ Count1, ISNULL(Count2,0) as Count2, ISNULL(Count3,0) as Count3, ISNULL(Count4,0)
   FROM DS_Prod.dbo.T04_GiftDetails T04
   Join DS_prod.dbo.T01_TransactionMaster T01
   On T04.DocumentNumber = T01.DocumentNumber   
-  Where [Status] not in ('E','X') and T01.[Date] between '2019-01-01' and getdate()-1 and T01.[Date]<='2019-12-31'
+  Where [Status] not in ('E','X') and T01.[Date] between '2020-01-01' and getdate()-1 and T01.[Date]<='2020-12-31'
   Group By YEAR(T01.[Date]), MONTH(T01.[Date]), DAY(T01.[Date])) B
   FULL JOIN
   (SELECT * FROM Reports.dbo.ProspectiveTotalDonations) C
@@ -335,7 +370,7 @@ Count1, ISNULL(Count2,0) as Count2, ISNULL(Count3,0) as Count3, ISNULL(Count4,0)
   FROM (SELECT *, DonationCt = CASE WHEN TotalAmount>0 THEN 1 WHEN TotalAmount<0 THEN -1 ELSE 0 END FROM DS_Prod.dbo.T04_GiftDetails) T04
   Join DS_prod.dbo.T01_TransactionMaster T01
   On T04.DocumentNumber = T01.DocumentNumber   
-  Where [Status] not in ('E','X') and YEAR(T01.[Date]) = 2019
+  Where [Status] not in ('E','X') and YEAR(T01.[Date]) = 2020
   Group By YEAR(T01.[Date]), MONTH(T01.[Date]), DAY(T01.[Date])) I
   
   ON H.[Month]=I.[Month] and H.[Day]=I.[Day]) A
@@ -346,7 +381,7 @@ FULL JOIN
   FROM (SELECT *, DonationCt = CASE WHEN TotalAmount>0 THEN 1 WHEN TotalAmount<0 THEN -1 ELSE 0 END FROM DS_Prod.dbo.T04_GiftDetails) T04
   Join DS_prod.dbo.T01_TransactionMaster T01
   On T04.DocumentNumber = T01.DocumentNumber   
-  Where [Status] not in ('E','X') and YEAR(T01.[Date]) = 2018
+  Where [Status] not in ('E','X') and YEAR(T01.[Date]) = 2019
   Group By YEAR(T01.[Date]), MONTH(T01.[Date]), DAY(T01.[Date])) B
 
 ON A.[Month]=B.[Month] and A.[Day]=B.[Day]) AA
@@ -357,7 +392,7 @@ FULL JOIN
   FROM (SELECT *, DonationCt = CASE WHEN TotalAmount>0 THEN 1 WHEN TotalAmount<0 THEN -1 ELSE 0 END FROM DS_Prod.dbo.T04_GiftDetails) T04
   Join DS_prod.dbo.T01_TransactionMaster T01
   On T04.DocumentNumber = T01.DocumentNumber   
-  Where [Status] not in ('E','X') and YEAR(T01.[Date]) = 2017
+  Where [Status] not in ('E','X') and YEAR(T01.[Date]) = 2018
   Group By YEAR(T01.[Date]), MONTH(T01.[Date]), DAY(T01.[Date])) BB
 
 ON AA.[Month]=BB.[Month] and AA.[Day]=BB.[Day]) AAA
@@ -369,7 +404,7 @@ FULL JOIN
   FROM (SELECT *, DonationCt = CASE WHEN TotalAmount>0 THEN 1 WHEN TotalAmount<0 THEN -1 ELSE 0 END FROM DS_Prod.dbo.T04_GiftDetails) T04
   Join DS_prod.dbo.T01_TransactionMaster T01
   On T04.DocumentNumber = T01.DocumentNumber   
-  Where [Status] not in ('E','X') and YEAR(T01.[Date]) = 2016
+  Where [Status] not in ('E','X') and YEAR(T01.[Date]) = 2017
   Group By YEAR(T01.[Date]), MONTH(T01.[Date]), DAY(T01.[Date])) BBB
 
 ON AAA.[Month]=BBB.[Month] and AAA.[Day]=BBB.[Day]) Y) Q
@@ -396,24 +431,50 @@ SUM([DAILYBUDGET]) OVER (PARTITION BY [MONTH] ORDER BY [MONTH], [DAY]) AS MOBUDG
 			ELSE NULL END,
 [BUDGETAMT]
 FROM
-(SELECT [PERIODID] as [MONTH]
-      , -SUM([BALANCE]) as BUDGETAMT FROM REPORTS.DBO.FS_BRDATA 
-WHERE ACTINDX IN (SELECT ACTINDX FROM LM.DBO.GL00100 WHERE (ACTNUMBR_3 BETWEEN 5000 AND 5099) OR (ACTNUMBR_3 between 3020 and 4000))
-AND YEAR1=2019 AND R=@R
-GROUP BY PERIODID) A) B
-JOIN Reports.dbo.Dates_2019 C
+(SELECT [PERIODID] as [MONTH], -SUM([PERDBLNC]) AS BUDGETAMT FROM  @DB GROUP BY [PERIODID]) A) B
+JOIN Reports.dbo.Dates_2016 C
 ON B.[MONTH]=C.[MONTH]) D) R
 
 ON Q.[MONTH]=R.[MONTH] and Q.[DAY]=R.[DAY]) Z
 ORDER BY [MONTH], [DAY]
 END
 ;
-SELECT *, CAVG2016 = CASE WHEN LINE<=DATEDIFF(day,'2018-12-31',@LineDate) THEN LINE * AVG2016A ELSE NULL END
+DELETE FROM REPORTS.DBO.CDR_OUTPUT2
+INSERT INTO REPORTS.DBO.CDR_OUTPUT2 ([DATE],[MONTH],[MONTHNAME],[DAY],[2016WKDAY],DAY2016A,DAYCT2016,CUM2016A,MOCUM2016A,
+COUNT2016,DAY2016P,CUM2016P,MOCUM2016P,DAILYBUDGET,BUDGET2016,MOBUDGET2016,[2015WKDAY],DAY2015A,DAYCT2015,CUM2015A,MOCUM2015A,COUNT2015,
+[2014WKDAY],DAY2014A,DAYCT2014,CUM2014A,MOCUM2014A,COUNT2014,[2013WKDAY],DAY2013A,DAYCT2013,CUM2013A,MOCUM2013A,COUNT2013,CUM2016)
+SELECT [DATE],ISNULL([MONTH],2) AS [MONTH],ISNULL([MONTHNAME],'February') AS [MONTHNAME],ISNULL([DAY],29) AS [DAY],ISNULL([2016WKDAY],'Saturday') AS [2016WKDAY],
+DAY2016A,DAYCT2016,CUM2016A,MOCUM2016A,COUNT2016,DAY2016P,CUM2016P,MOCUM2016P,DAILYBUDGET,BUDGET2016,MOBUDGET2016,[2015WKDAY],DAY2015A,DAYCT2015,CUM2015A,
+MOCUM2015A,COUNT2015,[2014WKDAY],DAY2014A,DAYCT2014,CUM2014A,MOCUM2014A,COUNT2014,[2013WKDAY],DAY2013A,DAYCT2013,CUM2013A,MOCUM2013A,COUNT2013,CUM2016
+FROM REPORTS.DBO.CDR_OUTPUT
+;
+UPDATE REPORTS.DBO.CDR_OUTPUT2
+SET [2015WKDAY] = NULL
+,[DAY2015A] = NULL
+,[DAYCT2015] = NULL
+,[CUM2015A] = NULL
+,[MOCUM2015A] = NULL
+,[COUNT2015] = NULL
+,[2014WKDAY] = NULL
+,[DAY2014A] = NULL
+,[DAYCT2014] = NULL
+,[CUM2014A] = NULL
+,[MOCUM2014A] = NULL
+,[COUNT2014] = NULL
+,[2013WKDAY] = NULL
+,[DAY2013A] = NULL
+,[DAYCT2013] = NULL
+,[CUM2013A] = NULL
+,[MOCUM2013A] = NULL
+,[COUNT2013] = NULL
+WHERE [DATE] = '2/29/2016'
+;
+SELECT *, CAVG2016 = CASE WHEN LINE<=DATEDIFF(day,'2019-12-31',@LineDate) THEN LINE * AVG2016A ELSE NULL END
 FROM
 ((SELECT *, ROW_NUMBER() OVER (ORDER BY [MONTH] ASC, [DAY] ASC) AS LINE
-FROM REPORTS.DBO.CDR_OUTPUT) A
+FROM REPORTS.DBO.CDR_OUTPUT2) A
 CROSS JOIN
-(SELECT AVG2016A =CUM2016A/ DATEDIFF(day,'2018-12-31',@LineDate) FROM
-(SELECT [DATE], CUM2016A, MOCUM2016A, ROW_NUMBER() OVER (ORDER BY [MONTH] ASC, [DAY] ASC) AS LINE FROM REPORTS.DBO.CDR_OUTPUT) A
-WHERE LINE = DATEDIFF(day,'2018-12-31',@LineDate)) B)
+(SELECT AVG2016A =CUM2016A/ DATEDIFF(day,'2019-12-31',@LineDate) FROM
+(SELECT [DATE], CUM2016A, MOCUM2016A, ROW_NUMBER() OVER (ORDER BY [MONTH] ASC, [DAY] ASC) AS LINE FROM REPORTS.DBO.CDR_OUTPUT2) A
+WHERE LINE = DATEDIFF(day,'2019-12-31',@LineDate)) B)
 ORDER BY MONTH ASC, DAY ASC
